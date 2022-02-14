@@ -1,11 +1,13 @@
 package file.explorer;
 
+import java.awt.Insets;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -15,8 +17,10 @@ import javafx.event.EventHandler;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.TextArea;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
@@ -26,6 +30,7 @@ import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
+import javax.swing.JTextArea;
 import sun.audio.AudioPlayer;
 import sun.audio.AudioStream;
 
@@ -33,6 +38,8 @@ import sun.audio.AudioStream;
  *
  * @author Tahsina
  */
+
+//C:/Users/Admin/Desktop
 public class FileExplorer extends Application {
      private ImageView backgroundImg;
      private Button createButton;//for creating a directory
@@ -43,6 +50,9 @@ public class FileExplorer extends Application {
      private Button removeButton;
      private Button deleteButton;
      private Button renameButton;
+     private Button getBackButton;
+     ArrayList<String> names = new ArrayList<String>();
+     static ArrayList<String> dummyNames = new ArrayList<String>();
      public void setBackgroundImg(ImageView backgroundImg) {
        this.backgroundImg = backgroundImg;
     }
@@ -70,6 +80,63 @@ public class FileExplorer extends Application {
     public void setRenameButton(Button renameButton) {
         this.renameButton = renameButton;
     }
+    public void setGetBackButton(Button getBackButton){
+        this.getBackButton = getBackButton;
+    }
+    
+    //-----------------------------------------new
+    
+    public static String printDirectoryTree(File folder) {
+    if (!folder.isDirectory()) {
+        throw new IllegalArgumentException("folder is not a Directory");
+    }
+    int indent = 0;
+    StringBuilder sb = new StringBuilder();
+    sb.setLength(0);
+    printDirectoryTree(folder, indent, sb);
+    return sb.toString();
+}
+
+private static void printDirectoryTree(File folder, int indent,
+        StringBuilder sb) {
+    if (!folder.isDirectory()) {
+        throw new IllegalArgumentException("folder is not a Directory");
+    }
+    sb.append(getIndentString(indent));
+    sb.append("+--");
+    sb.append(folder.getName());
+    sb.append("/");
+    sb.append("\n");
+    //dummyNames.add(sb.toString());
+    for (File file : folder.listFiles()) {
+        if (file.isDirectory()) {
+            printDirectoryTree(file, indent + 1, sb);
+        } else {
+            printFile(file, indent + 1, sb);
+        }
+    }
+
+}
+
+private static void printFile(File file, int indent, StringBuilder sb) {
+    sb.append(getIndentString(indent));
+    sb.append("+--");
+    sb.append(file.getName());
+    dummyNames.clear();
+    dummyNames.add(sb.toString());
+    sb.append("\n");
+    //dummyNames.add(sb.toString());
+}
+
+private static String getIndentString(int indent) {
+    StringBuilder sb = new StringBuilder();
+    for (int i = 0; i < indent; i++) {
+        sb.append("|  ");
+    }
+    return sb.toString();
+}
+
+    //-----------------------------------------new
     public void listf(String directoryName) {
     File directory = new File(directoryName);
     int count=0;
@@ -78,8 +145,12 @@ public class FileExplorer extends Application {
     if(fList != null)
         for (File file : fList) {      
             if (file.isFile()) {
+                String dum="|->"+file.getName();
+                names.add(dum);
                 System.out.println("|->"+file.getName());
             } else if (file.isDirectory()) {
+                String dir="DIRNAME:"+file.getName();
+                names.add(dir);
                 System.out.println("DIRNAME:"+file.getName());
                 listf(file.getAbsolutePath());
             }
@@ -235,7 +306,28 @@ public class FileExplorer extends Application {
          ;//here the styles of the button is added
             exploreButton.setStyle(styles);//the style is passed as a parameter
             
-            exploreButton.setOnMouseClicked(event->{
+             Group rootNew = new Group();
+          this.getBackButton = new Button("go back");
+          getBackButton.setLayoutX(320);
+          getBackButton.setLayoutY(600);
+           
+         //here the styles of the button is added
+            getBackButton.setStyle(styles);
+           
+            TextArea textArea = new TextArea();
+            textArea.setPrefColumnCount(15);
+            textArea.setPrefHeight(550);
+            textArea.setPrefWidth(700);
+            
+        //rootNew.getChildren().add(textArea);
+        rootNew.getChildren().add(getBackButton);
+        
+        rootNew.getChildren().add(textArea);
+        
+      
+        Scene scene2 = new Scene(rootNew,700,650);
+            
+            exploreButton.setOnMouseClicked(event->{//------------------------------------------------------->
                 try{
                      JFrame frame=new JFrame(); //creating JFrame
     
@@ -244,6 +336,11 @@ public class FileExplorer extends Application {
                 //C:/Users/Admin/Desktop
                 File dir = new File(path);
                 listf(path);
+                printDirectoryTree(dir);
+                for(String a : dummyNames){
+            textArea.appendText(a+ "\n");
+        }
+                primaryStage.setScene(scene2);
                     
                 }catch(Exception e){
                     System.out.println("the path you entered is wrong");
@@ -262,7 +359,7 @@ public class FileExplorer extends Application {
                      JFrame frame=new JFrame(); //creating JFrame
     
                   String path=JOptionPane.showInputDialog(frame,"Please provide the absolute path of the file you want to copy:");
-                   String input=JOptionPane.showInputDialog(frame,"Please provide the absolute path of the file where you want to copy:");
+                  String input=JOptionPane.showInputDialog(frame,"Please provide the absolute path of the file where you want to copy:");
                 //C:/Users/Admin/Desktop
                 
                    copyFile(path,input); 
@@ -333,7 +430,7 @@ public class FileExplorer extends Application {
                  try{
                      JFrame frame=new JFrame(); //creating JFrame
     
-                  String path=JOptionPane.showInputDialog(frame,"Please provide the absolute path of the directory you want to explore:");
+                  String path=JOptionPane.showInputDialog(frame,"Please provide the absolute path of the directory you want to rename:");
                    String input=JOptionPane.showInputDialog(frame,"Please provide the name you want to give to your file:");
                 //C:/Users/Admin/Desktop
                 File dir = new File(path);
@@ -368,13 +465,24 @@ public class FileExplorer extends Application {
         //root.getChildren().add (removeButton);
         root.getChildren().add(deleteButton);
         root.getChildren().add(renameButton);
+        
+        
+        
         //root.getChildren().add(btn);
         
         Scene scene = new Scene(root, 700, 650);
-        
-        primaryStage.setTitle("Hello World!");
+       
+        primaryStage.setTitle("File Explorer");
         primaryStage.setScene(scene);
         primaryStage.show();
+        
+        getBackButton.setOnMouseClicked(event->{
+                try{
+                    primaryStage.setScene(scene);        
+                }catch(Exception e){
+                    System.out.println("Something went wrong");
+                }
+            });
     }
 
     /**
